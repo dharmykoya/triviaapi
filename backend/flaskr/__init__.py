@@ -48,11 +48,11 @@ def create_app(test_config=None):
   Create an endpoint to handle GET requests
   for all available categories.
   '''
-    @app.route('/')
-    # def get_categories():
-    #     categories = Category.query.all()
-    #     print(15, categories)
-    #     return jsonify({'categories': categories})
+    @app.route('/categories')
+    def get_categories():
+        all_categories = Category.query.all()
+        categories = [category.format() for category in all_categories]
+        return jsonify({'categories': categories})
 
     '''
   @TODO:
@@ -68,7 +68,8 @@ def create_app(test_config=None):
   '''
 
     @app.route('/questions')
-    def get_queestions():
+    def get_questions():
+        page = request.args.get('page', 1, type=int)
         selection = Question.query.order_by(Question.category).all()
         current_questions = paginate_questions(request, selection)
         categories_cur = Category.query.order_by(Category.id).all()
@@ -103,6 +104,28 @@ def create_app(test_config=None):
   the form will clear and the question will appear at the end of the last page
   of the questions list in the "List" tab.  
   '''
+    @app.route('/questions', methods=['POST'])
+    def create_question():
+
+        body = request.get_json()
+
+        new_question = body.get('question', None)
+        new_answer = body.get('answer', None)
+        new_category = body.get('difficulty', None)
+        new_difficulty = body.get('category', None)
+
+        try:
+            question = Question(question=new_question, answer=new_answer,
+                                category=new_category, difficulty=new_difficulty)
+            question.insert()
+
+            return jsonify({
+                'success': True,
+                'question_id': question.id,
+            })
+
+        except:
+            abort(422)
 
     '''
   @TODO: 
@@ -123,6 +146,23 @@ def create_app(test_config=None):
   categories in the left column will cause only questions of that 
   category to be shown. 
   '''
+
+    @app.route('/categories/<int:category_id>/questions', methods=['GET'])
+    def get_questions_by_category(category_id):
+        print(34, category_id)
+        all_questions = Question.query.filter(
+            Question.category == category_id).all()
+        questions = [question.format() for question in all_questions]
+
+        if len(questions) == 0:
+            abort(404)
+
+        return jsonify({
+            'success': True,
+            'questions': questions,
+            'total_questions': len(questions),
+            'current_category': category_id,
+        })
 
     '''
   @TODO: 

@@ -18,6 +18,12 @@ class TriviaTestCase(unittest.TestCase):
         self.database_path = "postgres://{}/{}".format(
             'localhost:5432', self.database_name)
         setup_db(self.app, self.database_path)
+        self.new_question = {
+            'question': 'Who is honored as Father of Modern Chemistry?',
+            'answer': 'Antoine Lavoisier',
+            'category': 1,
+            'difficulty': 5
+        }
 
         # binds the app to the current context
         with self.app.app_context():
@@ -35,6 +41,12 @@ class TriviaTestCase(unittest.TestCase):
     Write at least one test for each test for successful operation and for expected errors.
     """
 
+    def test_get_categories(self):
+        response = self.client().get('/categories')
+        data = json.loads(response.data)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(data['categories'])
+
     def test_get_questions(self):
         response = self.client().get('/questions')
         data = json.loads(response.data)
@@ -43,6 +55,23 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['success'], True)
         self.assertTrue(len(data['categories']))
         self.assertTrue(len(data['questions']))
+
+    def test_create_question(self):
+        response = self.client().post('/questions', json=self.new_question)
+        data = json.loads(response.data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(data['question_id'])
+
+    def test_get_questions_by_category(self):
+        response = self.client().get('/categories/2/questions')
+
+        data = json.loads(response.data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(data['questions'])
+        self.assertTrue(data['total_questions'])
+        self.assertTrue(data['current_category'])
 
 
 # Make the tests conveniently executable
