@@ -87,22 +87,22 @@ def create_app(test_config=None):
         })
 
     '''
-  @TODO: 
-  Create an endpoint to DELETE question using a question ID. 
+  @TODO:
+  Create an endpoint to DELETE question using a question ID.
 
   TEST: When you click the trash icon next to a question, the question will be removed.
-  This removal will persist in the database and when you refresh the page. 
+  This removal will persist in the database and when you refresh the page.
   '''
 
     '''
-  @TODO: 
-  Create an endpoint to POST a new question, 
-  which will require the question and answer text, 
+  @TODO:
+  Create an endpoint to POST a new question,
+  which will require the question and answer text,
   category, and difficulty score.
 
-  TEST: When you submit a question on the "Add" tab, 
+  TEST: When you submit a question on the "Add" tab,
   the form will clear and the question will appear at the end of the last page
-  of the questions list in the "List" tab.  
+  of the questions list in the "List" tab.
   '''
     @app.route('/questions', methods=['POST'])
     def create_question():
@@ -111,12 +111,13 @@ def create_app(test_config=None):
 
         new_question = body.get('question', None)
         new_answer = body.get('answer', None)
-        new_category = body.get('difficulty', None)
-        new_difficulty = body.get('category', None)
+        new_category = body.get('category', None)
+        new_difficulty = body.get('difficulty', None)
+        int_difficulty = int(new_difficulty)
 
         try:
             question = Question(question=new_question, answer=new_answer,
-                                category=new_category, difficulty=new_difficulty)
+                                category=new_category, difficulty=int_difficulty)
             question.insert()
 
             return jsonify({
@@ -128,15 +129,38 @@ def create_app(test_config=None):
             abort(422)
 
     '''
-  @TODO: 
-  Create a POST endpoint to get questions based on a search term. 
-  It should return any questions for whom the search term 
-  is a substring of the question. 
+  @TODO:
+  Create a POST endpoint to get questions based on a search term.
+  It should return any questions for whom the search term
+  is a substring of the question.
 
-  TEST: Search by any phrase. The questions list will update to include 
-  only question that include that string within their question. 
-  Try using the word "title" to start. 
+  TEST: Search by any phrase. The questions list will update to include
+  only question that include that string within their question.
+  Try using the word "title" to start.
   '''
+    @app.route('/questions/search', methods=['POST'])
+    def search_questions():
+        body = request.get_json()
+
+        search_data = body.get('searchTerm', None)
+
+        try:
+            found_questions = Question.query.filter(
+                Question.question.ilike('%' + search_data + '%')).all()
+            search_data = [question.format() for question in found_questions]
+
+            if len(found_questions) == 0:
+                abort(404)
+
+            return jsonify({
+                'success': True,
+                'questions': search_data,
+                'total_questions': len(search_data),
+                'current_category': 'many'
+            })
+
+        except:
+            abort(422)
 
     '''
   @TODO: 
@@ -149,7 +173,6 @@ def create_app(test_config=None):
 
     @app.route('/categories/<int:category_id>/questions', methods=['GET'])
     def get_questions_by_category(category_id):
-        print(34, category_id)
         all_questions = Question.query.filter(
             Question.category == category_id).all()
         questions = [question.format() for question in all_questions]
