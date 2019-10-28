@@ -9,6 +9,17 @@ from models import setup_db, Question, Category
 QUESTIONS_PER_PAGE = 10
 
 
+def paginate_questions(request, selection):
+    page = request.args.get('page', 1, type=int)
+    start = (page - 1) * QUESTIONS_PER_PAGE
+    end = start + QUESTIONS_PER_PAGE
+
+    questions = [question.format() for question in selection]
+    current_questions = questions[start:end]
+
+    return current_questions
+
+
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__)
@@ -37,19 +48,42 @@ def create_app(test_config=None):
   Create an endpoint to handle GET requests
   for all available categories.
   '''
+    @app.route('/')
+    # def get_categories():
+    #     categories = Category.query.all()
+    #     print(15, categories)
+    #     return jsonify({'categories': categories})
 
     '''
-  @TODO: 
-  Create an endpoint to handle GET requests for questions, 
-  including pagination (every 10 questions). 
-  This endpoint should return a list of questions, 
-  number of total questions, current category, categories. 
+  @TODO:
+  Create an endpoint to handle GET requests for questions,
+  including pagination (every 10 questions).
+  This endpoint should return a list of questions,
+  number of total questions, current category, categories.
 
   TEST: At this point, when you start the application
   you should see questions and categories generated,
   ten questions per page and pagination at the bottom of the screen for three pages.
-  Clicking on the page numbers should update the questions. 
+  Clicking on the page numbers should update the questions.
   '''
+
+    @app.route('/questions')
+    def get_queestions():
+        selection = Question.query.order_by(Question.category).all()
+        current_questions = paginate_questions(request, selection)
+        categories_cur = Category.query.order_by(Category.id).all()
+        categories = [category.format() for category in categories_cur]
+
+        if len(current_questions) == 0:
+            abort(404)
+
+        return jsonify({
+            'success': True,
+            'questions': current_questions,
+            'total_questions': len(Question.query.all()),
+            'current_category': 'dami',
+            'categories': categories
+        })
 
     '''
   @TODO: 
