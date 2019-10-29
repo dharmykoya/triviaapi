@@ -91,6 +91,47 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['success'], True)
         self.assertEqual(data['deleted_id'], 6)
 
+    def test_play_quiz(self):
+        body = {
+            'previous_questions': [],
+            'quiz_category': {
+                'id': 0
+            }
+        }
+        response = self.client().post('/quizzes', json=body)
+        data = json.loads(response.data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(data['question'])
+
+    def test_play_quiz_with_category(self):
+        body = {
+            'previous_questions': [],
+            'quiz_category': {
+                'id': 2
+            }
+        }
+        response = self.client().post('/quizzes', json=body)
+        data = json.loads(response.data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(data['question'])
+        self.assertEqual(data['question']["category"], 2)
+
+    def test_play_quiz_with_previous_questions(self):
+        body = {
+            'previous_questions': [2, 3],
+            'quiz_category': {
+                'id': 2
+            }
+        }
+        response = self.client().post('/quizzes', json=body)
+        data = json.loads(response.data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(data['question'])
+        self.assertEqual(data['question']["category"], 2)
+
 
 # Make the tests conveniently executable
 if __name__ == "__main__":

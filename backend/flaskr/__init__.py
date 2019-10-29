@@ -181,12 +181,12 @@ def create_app(test_config=None):
             abort(422)
 
     '''
-  @TODO: 
-  Create a GET endpoint to get questions based on category. 
+  @TODO:
+  Create a GET endpoint to get questions based on category.
 
-  TEST: In the "List" tab / main screen, clicking on one of the 
-  categories in the left column will cause only questions of that 
-  category to be shown. 
+  TEST: In the "List" tab / main screen, clicking on one of the
+  categories in the left column will cause only questions of that
+  category to be shown.
   '''
 
     @app.route('/categories/<int:category_id>/questions', methods=['GET'])
@@ -206,16 +206,94 @@ def create_app(test_config=None):
         })
 
     '''
-  @TODO: 
-  Create a POST endpoint to get questions to play the quiz. 
-  This endpoint should take category and previous question parameters 
-  and return a random questions within the given category, 
-  if provided, and that is not one of the previous questions. 
+  @TODO:
+  Create a POST endpoint to get questions to play the quiz.
+  This endpoint should take category and previous question parameters
+  and return a random questions within the given category,
+  if provided, and that is not one of the previous questions.
 
   TEST: In the "Play" tab, after a user selects "All" or a category,
   one question at a time is displayed, the user is allowed to answer
-  and shown whether they were correct or not. 
+  and shown whether they were correct or not.
   '''
+
+    def get_questions(category_id):
+
+        if category_id == 0:
+            current_questions = Question.query.all()
+            questions = [question.format() for question in current_questions]
+
+            return questions
+
+        current_questions = Question.query.filter(
+            Question.category == category_id).all()
+
+        questions = [question.format() for question in current_questions]
+
+        return questions
+
+    
+    def random_question(questions, previous_questions):
+        questions_not_answered = [
+            question for question in questions if question["id"] not in previous_questions]
+
+        questions_length = len(questions_not_answered)
+
+        if questions_length == 0:
+            return False
+
+        question_at_random = random.randrange(0, questions_length)
+
+        return questions_not_answered[question_at_random]
+
+   
+    @app.route('/quizzes', methods=['POST'])
+    def play_quiz():
+        body = request.get_json()
+
+        previous_questions = body.get('previous_questions', None)
+        quiz_category = body.get('quiz_category', None)
+
+        category = quiz_category['id']
+
+        if category == 0:
+            questions = get_questions(category)
+            question = random_question(questions, previous_questions)
+
+            if not question:
+                return jsonify({
+                    'question': ''
+                })
+
+            return jsonify({
+                'question': question
+            })
+
+        if len(previous_questions) > 0:
+            questions = get_questions(category)
+            question = random_question(questions, previous_questions)
+
+            if not question:
+                return jsonify({
+                    'question': ''
+                })
+
+            return jsonify({
+                'question': question
+            })
+
+        if quiz_category is not None:
+            questions = get_questions(category)
+            question = random_question(questions, previous_questions)
+
+            if not question:
+                return jsonify({
+                    'question': ''
+                })
+
+            return jsonify({
+                'question': question
+            })
 
     '''
   @TODO: 

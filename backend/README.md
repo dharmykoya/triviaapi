@@ -1,4 +1,4 @@
-# Full Stack Trivia API Backend
+G# Full Stack Trivia API Backend
 
 ## Getting Started
 
